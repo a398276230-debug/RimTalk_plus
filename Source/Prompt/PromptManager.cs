@@ -32,11 +32,8 @@ public class PromptManager : IExposable
     /// <summary>All presets</summary>
     public List<PromptPreset> Presets = new();
     
-    /// <summary>Global variable store</summary>
+    /// <summary>Global variable store (for setvar/getvar)</summary>
     public VariableStore VariableStore = new();
-    
-    /// <summary>Player custom variables</summary>
-    public List<CustomVariable> CustomVariables = new();
 
     /// <summary>Gets the currently active preset</summary>
     public PromptPreset GetActivePreset()
@@ -97,6 +94,7 @@ public class PromptManager : IExposable
     /// <summary>
     /// Builds the final message list for AI client use.
     /// Chat history is obtained from context.ChatHistory and inserted at the {{chat.history}} marker.
+    /// Consecutive messages with the same role are automatically merged for API compatibility.
     /// </summary>
     /// <param name="context">Parse context (containing ChatHistory)</param>
     /// <returns>Message list (role, content)</returns>
@@ -154,7 +152,41 @@ public class PromptManager : IExposable
             }
         }
 
-        return result;
+        // 3. Merge consecutive messages with the same role for API compatibility
+        // This ensures compatibility with APIs like Gemini that require alternating roles
+        return MergeConsecutiveRoles(result);
+    }
+
+    /// <summary>
+    /// Merges consecutive messages with the same role into a single message.
+    /// This improves compatibility with APIs that require strict role alternation (e.g., Gemini).
+    /// </summary>
+    /// <param name="messages">Original message list</param>
+    /// <returns>Merged message list</returns>
+    private static List<(PromptRole role, string content)> MergeConsecutiveRoles(
+        List<(PromptRole role, string content)> messages)
+    {
+        if (messages == null || messages.Count <= 1)
+            return messages;
+
+        var merged = new List<(PromptRole role, string content)>();
+        
+        foreach (var (role, content) in messages)
+        {
+            if (merged.Count > 0 && merged[^1].role == role)
+            {
+                // Same role as previous - merge content
+                var last = merged[^1];
+                merged[^1] = (role, last.content + "\n\n" + content);
+            }
+            else
+            {
+                // Different role - add as new message
+                merged.Add((role, content));
+            }
+        }
+
+        return merged;
     }
 
     /// <summary>
@@ -298,35 +330,10 @@ Location: {{location}}"
         Logger.Message("Migrated legacy custom instruction to new prompt system");
     }
 
-    /// <summary>Adds a custom variable</summary>
-    public void AddCustomVariable(CustomVariable variable)
-    {
-        if (variable == null || string.IsNullOrEmpty(variable.Name)) return;
-        
-        // Remove existing variable with same name
-        CustomVariables.RemoveAll(v => v.Name.ToLowerInvariant() == variable.Name.ToLowerInvariant());
-        CustomVariables.Add(variable);
-    }
-
-    /// <summary>Removes a custom variable</summary>
-    public bool RemoveCustomVariable(string name)
-    {
-        if (string.IsNullOrEmpty(name)) return false;
-        return CustomVariables.RemoveAll(v => v.Name.ToLowerInvariant() == name.ToLowerInvariant()) > 0;
-    }
-
-    /// <summary>Gets a custom variable</summary>
-    public CustomVariable GetCustomVariable(string name)
-    {
-        if (string.IsNullOrEmpty(name)) return null;
-        return CustomVariables.FirstOrDefault(v => v.Name.ToLowerInvariant() == name.ToLowerInvariant());
-    }
-
     /// <summary>Resets to default settings</summary>
     public void ResetToDefaults()
     {
         Presets.Clear();
-        CustomVariables.Clear();
         VariableStore.Clear();
         InitializeDefaults();
     }
@@ -335,12 +342,10 @@ Location: {{location}}"
     {
         Scribe_Collections.Look(ref Presets, "presets", LookMode.Deep);
         Scribe_Deep.Look(ref VariableStore, "variableStore");
-        Scribe_Collections.Look(ref CustomVariables, "customVariables", LookMode.Deep);
 
         // Ensure collections are not null
         Presets ??= new List<PromptPreset>();
         VariableStore ??= new VariableStore();
-        CustomVariables ??= new List<CustomVariable>();
         
         // Ensure there's a default preset
         if (Presets.Count == 0)

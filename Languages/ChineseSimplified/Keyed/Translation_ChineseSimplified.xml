@@ -119,6 +119,40 @@
     <RimTalk.Settings.PromptPreset.UserVariablesSection>用户变量 ({{user.xxx}})</RimTalk.Settings.PromptPreset.UserVariablesSection>
     <RimTalk.Settings.PromptPreset.RuntimeVariables>运行时变量 (setvar)</RimTalk.Settings.PromptPreset.RuntimeVariables>
     
+    <!-- Import/Export -->
+    <RimTalk.Settings.PromptPreset.Export>导出</RimTalk.Settings.PromptPreset.Export>
+    <RimTalk.Settings.PromptPreset.Import>导入</RimTalk.Settings.PromptPreset.Import>
+    <RimTalk.Settings.PromptPreset.ExportSuccess>预设已导出到：{0}</RimTalk.Settings.PromptPreset.ExportSuccess>
+    <RimTalk.Settings.PromptPreset.ExportFailed>导出预设失败。</RimTalk.Settings.PromptPreset.ExportFailed>
+    <RimTalk.Settings.PromptPreset.ImportSuccess>成功导入预设：{0}</RimTalk.Settings.PromptPreset.ImportSuccess>
+    <RimTalk.Settings.PromptPreset.ImportFailed>导入预设失败。</RimTalk.Settings.PromptPreset.ImportFailed>
+    <RimTalk.Settings.PromptPreset.NoPresetsToImport>未找到预设文件。请将 .json 文件放置到：\n{0}</RimTalk.Settings.PromptPreset.NoPresetsToImport>
+    <RimTalk.Settings.PromptPreset.OpenFolder>📂 打开文件夹</RimTalk.Settings.PromptPreset.OpenFolder>
+    
+    <!-- Simple/Advanced Mode -->
+    <RimTalk.Settings.SwitchToAdvanced>🔧 高级模式 →</RimTalk.Settings.SwitchToAdvanced>
+    <RimTalk.Settings.SwitchToSimple>← 📝 简单模式</RimTalk.Settings.SwitchToSimple>
+    <RimTalk.Settings.SimpleModeTip>💡 角色资料、聊天历史和上下文信息会自动包含。</RimTalk.Settings.SimpleModeTip>
+    <RimTalk.Settings.AdvancedModeWarning>高级模式可以完全控制提示词条目、变量和消息顺序。您当前的指令将被保留。是否继续？</RimTalk.Settings.AdvancedModeWarning>
+    <RimTalk.Settings.PromptHelp>📖 帮助</RimTalk.Settings.PromptHelp>
+    <RimTalk.Settings.AdvancedHelpContent>高级模式说明：
+
+此模式让您完全控制提示词系统：
+
+预设：创建多个提示词配置并在它们之间切换。
+
+条目：每个条目是发送给 AI 的一条消息。您可以：
+• 设置角色（System/User/Assistant）
+• 设置位置（相对位置或聊天内位置及深度）
+• 使用 {{变量}} 插入动态内容
+
+变量：
+• 内置变量：{{pawns.all}}、{{pawn1.name}}、{{weather}} 等
+• 运行时变量：setvar/getvar 用于 AI 控制的值
+
+聊天历史：使用 {{chat.history}} 条目控制对话历史的插入位置。
+</RimTalk.Settings.AdvancedHelpContent>
+    
     <RimTalk.Settings.EventFilter>事件过滤器</RimTalk.Settings.EventFilter>
     <RimTalk.Settings.ApiKey>云端 API 密钥</RimTalk.Settings.ApiKey>
     <RimTalk.Settings.GetFreeApiKey>获取免费 API 密钥</RimTalk.Settings.GetFreeApiKey>

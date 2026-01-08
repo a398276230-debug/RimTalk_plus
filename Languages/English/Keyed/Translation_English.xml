@@ -119,6 +119,41 @@
     <RimTalk.Settings.PromptPreset.UserVariablesSection>User Variables ({{user.xxx}})</RimTalk.Settings.PromptPreset.UserVariablesSection>
     <RimTalk.Settings.PromptPreset.RuntimeVariables>Runtime Variables (setvar)</RimTalk.Settings.PromptPreset.RuntimeVariables>
     
+    <!-- Import/Export -->
+    <RimTalk.Settings.PromptPreset.Export>Export</RimTalk.Settings.PromptPreset.Export>
+    <RimTalk.Settings.PromptPreset.Import>Import</RimTalk.Settings.PromptPreset.Import>
+    <RimTalk.Settings.PromptPreset.ExportSuccess>Preset exported to: {0}</RimTalk.Settings.PromptPreset.ExportSuccess>
+    <RimTalk.Settings.PromptPreset.ExportFailed>Failed to export preset.</RimTalk.Settings.PromptPreset.ExportFailed>
+    <RimTalk.Settings.PromptPreset.ImportSuccess>Successfully imported preset: {0}</RimTalk.Settings.PromptPreset.ImportSuccess>
+    <RimTalk.Settings.PromptPreset.ImportFailed>Failed to import preset.</RimTalk.Settings.PromptPreset.ImportFailed>
+    <RimTalk.Settings.PromptPreset.NoPresetsToImport>No preset files found. Place .json files in:\n{0}</RimTalk.Settings.PromptPreset.NoPresetsToImport>
+    <RimTalk.Settings.PromptPreset.OpenFolder>📂 Open Folder</RimTalk.Settings.PromptPreset.OpenFolder>
+    
+    <!-- Simple/Advanced Mode -->
+    <RimTalk.Settings.SwitchToAdvanced>🔧 Advanced Mode →</RimTalk.Settings.SwitchToAdvanced>
+    <RimTalk.Settings.SwitchToSimple>← 📝 Simple Mode</RimTalk.Settings.SwitchToSimple>
+    <RimTalk.Settings.SimpleModeTip>💡 Character profiles, chat history, and context are automatically included.</RimTalk.Settings.SimpleModeTip>
+    <RimTalk.Settings.AdvancedModeWarning>Advanced mode provides full control over prompt entries, variables, and message ordering. Your current instruction will be preserved. Continue?</RimTalk.Settings.AdvancedModeWarning>
+    <RimTalk.Settings.PromptHelp>📖 Help</RimTalk.Settings.PromptHelp>
+    <RimTalk.Settings.AdvancedHelpContent>Advanced Mode Instructions:
+
+This mode gives you full control over the prompt system:
+
+PRESETS: Create multiple prompt configurations and switch between them.
+
+ENTRIES: Each entry is a message sent to the AI. You can:
+• Set the Role (System/User/Assistant)
+• Set the Position (Relative or InChat with depth)
+• Use {{variables}} for dynamic content
+
+VARIABLES:
+• Built-in: {{pawns.all}}, {{pawn1.name}}, {{weather}}, etc.
+• Runtime: setvar/getvar for AI-controlled values
+
+CHAT HISTORY: Use {{chat.history}} entry to control where conversation history appears.
+
+For detailed documentation, see the docs/ folder in the mod directory.</RimTalk.Settings.AdvancedHelpContent>
+    
     <RimTalk.Settings.EventFilter>Event Filter</RimTalk.Settings.EventFilter>
     <RimTalk.Settings.ApiKey>Cloud API Key</RimTalk.Settings.ApiKey>
     <RimTalk.Settings.GetFreeApiKey>Get a free API key</RimTalk.Settings.GetFreeApiKey>

@@ -1,4 +1,4 @@
-·using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -112,16 +112,7 @@ public static class MustacheParser
     {
         var lowerExpr = expression.ToLowerInvariant().Trim();
         
-        // 1. Check if it's a user custom variable (user.xxx)
-        if (lowerExpr.StartsWith("user."))
-        {
-            var varName = lowerExpr.Substring(5);
-            var customVar = PromptManager.Instance?.CustomVariables
-                .FirstOrDefault(v => v.Name.ToLowerInvariant() == varName);
-            return customVar?.GetValue() ?? "";
-        }
-        
-        // 2. Check if there's a mod-registered provider (full replacement)
+        // 1. Check if there's a mod-registered provider (full replacement)
         if (CustomProviders.TryGetValue(lowerExpr, out var provider))
         {
             try
@@ -135,10 +126,10 @@ public static class MustacheParser
             }
         }
         
-        // 3. Get built-in variable value
+        // 2. Get built-in variable value
         var result = EvaluateBuiltinVariable(lowerExpr, context);
         
-        // 4. Apply any registered appenders to modify the result
+        // 3. Apply any registered appenders to modify the result
         result = ApplyAppenders(lowerExpr, context, result);
         
         return result;
