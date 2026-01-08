@@ -190,6 +190,33 @@ public class PromptManager : IExposable
     }
 
     /// <summary>
+    /// Converts PromptRole to Role (for AIService compatibility).
+    /// </summary>
+    public static Role ConvertToRole(PromptRole promptRole)
+    {
+        return promptRole switch
+        {
+            PromptRole.System => Role.System,
+            PromptRole.User => Role.User,
+            PromptRole.Assistant => Role.AI,
+            _ => Role.User
+        };
+    }
+
+    /// <summary>
+    /// Builds prompt messages and converts to Role format for direct use by AIService.
+    /// </summary>
+    /// <param name="context">Parse context</param>
+    /// <returns>Message list in (Role, content) format</returns>
+    public List<(Role role, string content)> BuildPromptMessagesAsRoles(MustacheContext context)
+    {
+        var promptMessages = BuildPromptMessages(context);
+        return promptMessages
+            .Select(m => (ConvertToRole(m.role), m.content))
+            .ToList();
+    }
+
+    /// <summary>
     /// Builds system instruction string (for legacy API compatibility).
     /// </summary>
     public string BuildSystemInstruction(MustacheContext context)

@@ -80,6 +80,23 @@ public static class TalkService
         talkRequest.Context = PromptService.BuildContext(pawns);
         PromptService.DecoratePrompt(talkRequest, pawns, status);
         
+        // Save Participants for PromptManager (collected only once in sync layer)
+        talkRequest.Participants = pawns;
+        
+        // Build PromptMessages in sync layer using PromptManager
+        var mustacheContext = MustacheContext.FromTalkRequest(talkRequest);
+        mustacheContext.DialogueType = GetDialogueTypeDescription(talkRequest, pawns);
+        talkRequest.PromptMessages = PromptManager.Instance.BuildPromptMessagesAsRoles(mustacheContext);
+        
+        // Fallback to legacy instruction if new system returns empty
+        if (talkRequest.PromptMessages == null || talkRequest.PromptMessages.Count == 0)
+        {
+            talkRequest.PromptMessages = new List<(Role role, string content)>
+            {
+                (Role.System, $"{Constant.Instruction}\n{talkRequest.Context}")
+            };
+        }
+        
         // Offload the AI request and processing to a background thread to avoid blocking the game's main thread.
         Task.Run(() => GenerateAndProcessTalkAsync(talkRequest));
 
@@ -90,6 +107,7 @@ public static class TalkService
 
     /// <summary>
     /// Handles the asynchronous AI streaming and processes the responses.
+    /// Simplified: All data preparation is done in sync layer, this only handles sending and response processing.
     /// </summary>
     private static async Task GenerateAndProcessTalkAsync(TalkRequest talkRequest)
     {
@@ -100,61 +118,12 @@ public static class TalkService
             
             var receivedResponses = new List<TalkResponse>();
 
-            // Collect all pawns for context (initiator + recipient + nearby)
-            var allPawns = new List<Pawn> { initiator };
-            if (talkRequest.Recipient != null) allPawns.Add(talkRequest.Recipient);
-            
-            // Add nearby pawns from the original request's context
-            var nearbyPawns = PawnSelector.GetAllNearByPawns(initiator);
-            foreach (var p in nearbyPawns.Where(p => !allPawns.Contains(p)))
-            {
-                var pawnState = Cache.Get(p);
-                if (pawnState?.CanDisplayTalk() == true && pawnState.TalkResponses.Empty())
-                {
-                    allPawns.Add(p);
-                    if (allPawns.Count >= Settings.Get().Context.MaxPawnContextCount) break;
-                }
-            }
-
-            // Build prompt messages using new PromptManager system
-            var context = MustacheContext.FromTalkRequest(talkRequest, allPawns);
-            
-            // Set dialogue type and status from the already-computed prompt
-            context.DialogueType = GetDialogueTypeDescription(talkRequest, allPawns);
-            context.DialogueStatus = talkRequest.Prompt;
-            
-            // Set chat history in context (roles are now System/Assistant instead of User/Assistant)
-            context.ChatHistory = TalkHistory.GetMessageHistory(initiator);
-            
-            var promptMessages = PromptManager.Instance.BuildPromptMessages(context);
-            
-            // Convert PromptRole to Role and build prefix messages list
-            var prefixMessages = new List<(Role role, string message)>();
-            foreach (var (promptRole, content) in promptMessages)
-            {
-                var role = promptRole switch
-                {
-                    PromptRole.System => Role.System,
-                    PromptRole.User => Role.User,
-                    PromptRole.Assistant => Role.AI,
-                    _ => Role.User
-                };
-                prefixMessages.Add((role, content));
-            }
-            
-            // Fallback to legacy instruction if new system returns empty
-            if (prefixMessages.Count == 0)
-            {
-                // Use legacy instruction with context appended
-                prefixMessages.Add((Role.System, $"{Constant.Instruction}\n{talkRequest.Context}"));
-            }
-
+            // PromptMessages already built in sync layer, passed via talkRequest
             // Call the streaming chat service. The callback is executed as each piece of dialogue is parsed.
-            // Chat history is now included in prefixMessages via BuildPromptMessages, so pass empty list
             await AIService.ChatStreaming(
                 talkRequest,
-                prefixMessages,
-                new List<(Role role, string message)>(),  // History already included in prefixMessages
+                Constant.Instruction,  // Keep signature compatible
+                TalkHistory.GetMessageHistory(initiator),  // Keep signature compatible
                 talkResponse =>
                 {
                     Logger.Debug($"Streamed: {talkResponse}");

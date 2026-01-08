@@ -18,15 +18,31 @@ public static class AIService
     private static bool _firstInstruction = true;
 
     /// <summary>
-    /// Streaming chat that invokes callback as each player's dialogue is parsed
+    /// Streaming chat that invokes callback as each player's dialogue is parsed.
+    /// Keeps original signature for compatibility, but prioritizes request.PromptMessages if built in sync layer.
     /// </summary>
-    public static async Task ChatStreaming(TalkRequest request, List<(Role role, string message)> prefixMessages,
+    public static async Task ChatStreaming(TalkRequest request, string instruction,
         List<(Role role, string message)> messages,
         Action<TalkResponse> onPlayerResponseReceived)
     {
-        // Messages now come from the prompt system with correct roles
-        // No longer hardcode request.Prompt as User role - it's included in prefixMessages via {{dialogue.status}}
-        var currentMessages = new List<(Role role, string message)>(messages);
+        // Prioritize PromptMessages built in sync layer
+        List<(Role role, string message)> prefixMessages;
+        List<(Role role, string message)> currentMessages;
+        
+        if (request.PromptMessages != null && request.PromptMessages.Count > 0)
+        {
+            // Use new preset system (PromptMessages contains everything)
+            prefixMessages = request.PromptMessages;
+            currentMessages = new List<(Role role, string message)>();  // Empty, already included in prefixMessages
+        }
+        else
+        {
+            // Fallback to legacy path: use instruction and messages parameters
+            var fullInstruction = $"{instruction}\n{request.Context}";
+            prefixMessages = new List<(Role role, string message)> { (Role.System, fullInstruction) };
+            currentMessages = new List<(Role role, string message)>(messages) { (Role.User, request.Prompt) };
+        }
+        
         var apiLog = ApiHistory.AddRequest(request, Channel.Stream);
         var lastApiLog = apiLog;
 

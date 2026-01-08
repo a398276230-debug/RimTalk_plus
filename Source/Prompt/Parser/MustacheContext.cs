@@ -69,17 +69,26 @@ public class MustacheContext
 
     /// <summary>
     /// Creates context from TalkRequest.
+    /// Uses Participants from TalkRequest if available, otherwise falls back to provided pawns list.
     /// </summary>
-    public static MustacheContext FromTalkRequest(TalkRequest request, List<Pawn> pawns)
+    public static MustacheContext FromTalkRequest(TalkRequest request, List<Pawn> pawns = null)
     {
+        // Prefer TalkRequest.Participants (filled in sync layer)
+        var participants = request?.Participants ?? pawns ?? new List<Pawn>();
+        
         return new MustacheContext
         {
             TalkRequest = request,
-            AllPawns = pawns ?? new List<Pawn>(),
+            AllPawns = participants,
             CurrentPawn = request?.Initiator,
             Map = request?.Initiator?.Map,
             VariableStore = PromptManager.Instance?.VariableStore ?? new VariableStore(),
-            PawnContext = request?.Context
+            // Use data already built in TalkRequest
+            PawnContext = request?.Context,
+            DialogueStatus = request?.Prompt,
+            ChatHistory = request?.Initiator != null
+                ? TalkHistory.GetMessageHistory(request.Initiator)
+                : new List<(Role role, string message)>()
         };
     }
 }
