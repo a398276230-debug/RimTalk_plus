@@ -149,7 +149,9 @@ ENTRIES: Each entry is a message sent to the AI. You can:
 VARIABLES:
 • Built-in: {{pawns.all}}, {{pawn1.name}}, {{weather}}, etc.
 • Runtime: setvar/getvar for AI-controlled values
-
+    • Example:
+    • {{setvar::counter::1}}
+    • Current count: {{getvar::counter}}
 CHAT HISTORY: Use {{chat.history}} entry to control where conversation history appears.
 
 For detailed documentation, see the docs/ folder in the mod directory.</RimTalk.Settings.AdvancedHelpContent>

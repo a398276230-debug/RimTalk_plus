@@ -149,7 +149,9 @@
 变量：
 • 内置变量：{{pawns.all}}、{{pawn1.name}}、{{weather}} 等
 • 运行时变量：setvar/getvar 用于 AI 控制的值
-
+    •例子：
+    •{{setvar::counter::1}}
+    •当前计数：{{getvar::counter}}
 聊天历史：使用 {{chat.history}} 条目控制对话历史的插入位置。
 </RimTalk.Settings.AdvancedHelpContent>
     
