@@ -31,6 +31,22 @@ public static class MustacheParser
     
     // Pawn index matching regex (pawn1, pawn2, pawn3...)
     private static readonly Regex PawnIndexRegex = new(@"^pawn(\d+)\.(.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    
+    private static readonly HashSet<string> PawnMultiLineProperties = new()
+    {
+        "profile",
+        "backstory",
+        "traits",
+        "skills",
+        "health",
+        "thoughts",
+        "relations",
+        "equipment",
+        "status",
+        "genes",
+        "ideology",
+        "captive_status"
+    };
 
     /// <summary>
     /// Parses and substitutes mustache syntax.
@@ -170,6 +186,11 @@ public static class MustacheParser
         var pawn = context.CurrentPawn;
         var map = context.Map ?? pawn?.Map;
         
+        if (varName.StartsWith("pawnn."))
+        {
+            return EvaluatePawnNVariable(varName, context);
+        }
+        
         // Check if it's a pawn index variable (pawn1.xxx, pawn2.xxx, ...)
         var pawnIndexMatch = PawnIndexRegex.Match(varName);
         if (pawnIndexMatch.Success)
@@ -262,6 +283,55 @@ public static class MustacheParser
         var pawn = pawns[index - 1]; // Convert to 0-based index
         var property = match.Groups[2].Value.ToLowerInvariant();
         
+        return GetPawnProperty(pawn, property, context);
+    }
+
+    /// <summary>
+    /// Evaluates pawnN variable by iterating all participating pawns.
+    /// </summary>
+    private static string EvaluatePawnNVariable(string varName, MustacheContext context)
+    {
+        var property = varName.Substring("pawnn.".Length).Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(property))
+            return "";
+
+        var pawns = context.Pawns;
+        if (pawns == null || pawns.Count == 0)
+            return "";
+
+        bool isMultiLine = PawnMultiLineProperties.Contains(property);
+        var entries = new List<string>();
+
+        for (int i = 0; i < pawns.Count; i++)
+        {
+            var pawn = pawns[i];
+            if (pawn == null || pawn.IsPlayer()) continue;
+
+            var value = GetPawnProperty(pawn, property, context);
+            if (string.IsNullOrWhiteSpace(value)) continue;
+
+            value = value.TrimEnd();
+            if (isMultiLine)
+            {
+                var label = pawn.LabelShort ?? $"Pawn{i + 1}";
+                entries.Add($"[P{i + 1}] {label}\n{value}");
+            }
+            else
+            {
+                entries.Add(value.Trim());
+            }
+        }
+
+        if (entries.Count == 0)
+            return "";
+
+        return isMultiLine
+            ? string.Join("\n\n", entries).TrimEnd()
+            : string.Join(", ", entries);
+    }
+
+    private static string GetPawnProperty(Pawn pawn, string property, MustacheContext context)
+    {
         return property switch
         {
             "name" => pawn?.LabelShort ?? "",
