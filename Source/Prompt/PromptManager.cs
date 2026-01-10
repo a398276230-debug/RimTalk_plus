@@ -102,6 +102,13 @@ public class PromptManager : IExposable
     /// <returns>Message list (role, content)</returns>
     public List<(PromptRole role, string content)> BuildPromptMessages(MustacheContext context)
     {
+        return BuildPromptMessagesInternal(context, null);
+    }
+
+    private List<(PromptRole role, string content)> BuildPromptMessagesInternal(
+        MustacheContext context,
+        List<PromptMessageSegment> segments)
+    {
         var result = new List<(PromptRole role, string content)>();
         var preset = GetActivePreset();
         if (preset == null)
@@ -119,6 +126,7 @@ public class PromptManager : IExposable
                 // Insert chat history at this position
                 if (context.ChatHistory != null && context.ChatHistory.Count > 0)
                 {
+                    string entryName = string.IsNullOrWhiteSpace(entry.Name) ? "Chat History" : entry.Name;
                     foreach (var (role, message) in context.ChatHistory)
                     {
                         // Map all roles correctly: System -> System, User -> User, AI -> Assistant
@@ -130,15 +138,18 @@ public class PromptManager : IExposable
                             _ => PromptRole.System
                         };
                         result.Add((promptRole, message));
+                        segments?.Add(new PromptMessageSegment(entry.Id, entryName, ConvertToRole(promptRole), message));
                     }
                 }
-                continue;  // Don't add the marker itself as a message
+                continue; // Don't add the marker itself as a message
             }
-            
+
             var content = MustacheParser.Parse(entry.Content, context);
             if (!string.IsNullOrWhiteSpace(content))
             {
                 result.Add((entry.Role, content));
+                string entryName = string.IsNullOrWhiteSpace(entry.Name) ? "Entry" : entry.Name;
+                segments?.Add(new PromptMessageSegment(entry.Id, entryName, ConvertToRole(entry.Role), content));
             }
         }
 
@@ -151,6 +162,9 @@ public class PromptManager : IExposable
                 // Calculate insertion position (counting from end of result)
                 var insertIndex = Math.Max(0, result.Count - entry.InChatDepth);
                 result.Insert(insertIndex, (entry.Role, content));
+                string entryName = string.IsNullOrWhiteSpace(entry.Name) ? "Entry" : entry.Name;
+                segments?.Insert(insertIndex, new PromptMessageSegment(entry.Id, entryName, ConvertToRole(entry.Role),
+                    content));
             }
         }
 
@@ -208,7 +222,17 @@ public class PromptManager : IExposable
     /// <returns>Message list in (Role, content) format</returns>
     public List<(Role role, string content)> BuildPromptMessagesAsRoles(MustacheContext context)
     {
-        var promptMessages = BuildPromptMessages(context);
+        var promptMessages = BuildPromptMessagesInternal(context, null);
+        return promptMessages
+            .Select(m => (ConvertToRole(m.role), m.content))
+            .ToList();
+    }
+
+    public List<(Role role, string content)> BuildPromptMessagesAsRoles(
+        MustacheContext context,
+        List<PromptMessageSegment> segments)
+    {
+        var promptMessages = BuildPromptMessagesInternal(context, segments);
         return promptMessages
             .Select(m => (ConvertToRole(m.role), m.content))
             .ToList();
@@ -384,7 +408,9 @@ public class PromptManager : IExposable
         mustacheContext.DialogueStatus = status;
         mustacheContext.DialoguePrompt = talkRequest.Prompt;  // This is now the decorated prompt
         
-        var messages = BuildPromptMessagesAsRoles(mustacheContext);
+        var segments = new List<PromptMessageSegment>();
+        var messages = BuildPromptMessagesAsRoles(mustacheContext, segments);
+        talkRequest.PromptMessageSegments = segments.Count > 0 ? segments : null;
         return messages.Count > 0 ? messages : null;
     }
 }
