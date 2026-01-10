@@ -80,16 +80,15 @@ public static class PresetSerializer
             if (descMatch.Success)
                 preset.Description = UnescapeJson(descMatch.Groups[1].Value);
             
-            // Parse entries array
-            var entriesMatch = Regex.Match(json, @"""entries""\s*:\s*\[(.*)\]", RegexOptions.Singleline);
+            // Parse entries array using a proper JSON object parser
+            var entriesMatch = Regex.Match(json, @"""entries""\s*:\s*\[", RegexOptions.Singleline);
             if (entriesMatch.Success)
             {
-                var entriesJson = entriesMatch.Groups[1].Value;
-                var entryMatches = Regex.Matches(entriesJson, @"\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}", RegexOptions.Singleline);
+                int startIndex = entriesMatch.Index + entriesMatch.Length;
+                var entries = ParseJsonArray(json, startIndex);
                 
-                foreach (Match entryMatch in entryMatches)
+                foreach (var entryJson in entries)
                 {
-                    var entryJson = entryMatch.Groups[1].Value;
                     var entry = ParseEntry(entryJson);
                     if (entry != null)
                     {
@@ -102,7 +101,7 @@ public static class PresetSerializer
             preset.Id = Guid.NewGuid().ToString();
             preset.IsActive = false;
             
-            Logger.Message($"Successfully imported preset: {preset.Name} with {preset.Entries.Count} entries");
+            Logger.Debug($"Successfully imported preset: {preset.Name} with {preset.Entries.Count} entries");
             return preset;
         }
         catch (Exception ex)
@@ -110,6 +109,97 @@ public static class PresetSerializer
             Logger.Error($"Failed to import preset: {ex.Message}");
             return null;
         }
+    }
+    
+    /// <summary>
+    /// Parses a JSON array and returns individual object strings.
+    /// This method properly handles nested braces inside string values (like Mustache templates {{...}}).
+    /// </summary>
+    private static List<string> ParseJsonArray(string json, int startIndex)
+    {
+        var results = new List<string>();
+        int i = startIndex;
+        
+        while (i < json.Length)
+        {
+            // Skip whitespace
+            while (i < json.Length && char.IsWhiteSpace(json[i])) i++;
+            
+            if (i >= json.Length) break;
+            
+            // Check for end of array
+            if (json[i] == ']') break;
+            
+            // Skip comma between objects
+            if (json[i] == ',')
+            {
+                i++;
+                continue;
+            }
+            
+            // Expect start of object
+            if (json[i] == '{')
+            {
+                int objectStart = i;
+                int braceCount = 0;
+                bool inString = false;
+                bool escape = false;
+                
+                // Parse until we find the matching closing brace
+                while (i < json.Length)
+                {
+                    char c = json[i];
+                    
+                    if (escape)
+                    {
+                        escape = false;
+                        i++;
+                        continue;
+                    }
+                    
+                    if (c == '\\' && inString)
+                    {
+                        escape = true;
+                        i++;
+                        continue;
+                    }
+                    
+                    if (c == '"')
+                    {
+                        inString = !inString;
+                    }
+                    else if (!inString)
+                    {
+                        if (c == '{')
+                        {
+                            braceCount++;
+                        }
+                        else if (c == '}')
+                        {
+                            braceCount--;
+                            if (braceCount == 0)
+                            {
+                                // Found complete object
+                                // Extract content between braces (excluding the braces themselves)
+                                string objectContent = json.Substring(objectStart + 1, i - objectStart - 1);
+                                results.Add(objectContent);
+                                i++;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    i++;
+                }
+            }
+            else
+            {
+                // Unexpected character, skip it
+                i++;
+            }
+        }
+        
+        return results;
     }
     
     /// <summary>
@@ -298,7 +388,7 @@ public static class PresetSerializer
             var path = Path.Combine(GetExportDirectory(), filename + ".json");
             File.WriteAllText(path, json, Encoding.UTF8);
             
-            Logger.Message($"Exported preset to: {path}");
+            Logger.Debug($"Exported preset to: {path}");
             return true;
         }
         catch (Exception ex)

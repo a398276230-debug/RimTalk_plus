@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RimTalk.Data;
+using RimTalk.Service;
+using RimTalk.Source.Data;
 using RimTalk.Util;
 using Verse;
 
@@ -191,16 +193,12 @@ public class PromptManager : IExposable
 
     /// <summary>
     /// Converts PromptRole to Role (for AIService compatibility).
+    /// Both enums have matching values, so direct cast works.
     /// </summary>
     public static Role ConvertToRole(PromptRole promptRole)
     {
-        return promptRole switch
-        {
-            PromptRole.System => Role.System,
-            PromptRole.User => Role.User,
-            PromptRole.Assistant => Role.AI,
-            _ => Role.User
-        };
+        // PromptRole.System=0, User=1, Assistant=2 maps to Role.System=0, User=1, AI=2
+        return (Role)promptRole;
     }
 
     /// <summary>
@@ -251,36 +249,24 @@ public class PromptManager : IExposable
         }
     }
 
-    /// <summary>Creates default preset - entry order is determined by list position (drag-to-reorder like SillyTavern)</summary>
+    // Creates default preset - entry order is determined by list position (drag-to-reorder like SillyTavern)
     private PromptPreset CreateDefaultPreset()
     {
         return new PromptPreset
         {
             Name = "RimTalk Default",
-            Description = "RimTalk默认提示词预设",
+            Description = "RimTalk default prompt preset",
             IsActive = true,
             Entries = new List<PromptEntry>
             {
-                // 1. Base Instruction
+                // 1. Base Instruction - reuses Constant.DefaultInstruction
                 new()
                 {
                     Name = "Base Instruction",
                     Role = PromptRole.System,
                     Position = PromptPosition.Relative,
                     Editable = true,
-                    Content = @"Role-play RimWorld character per profile
-
-Rules:
-Preserve original names (no translation)
-Keep dialogue short ({{lang}} only, 1-2 sentences)
-
-Roles:
-Prisoner: wary, hesitant; mention confinement; plead or bargain
-Slave: fearful, obedient; reference forced labor and exhaustion; call colonists ""master""
-Visitor: polite, curious, deferential; treat other visitors in the same group as companions
-Enemy: hostile, aggressive; terse commands/threats
-
-Monologue = 1 turn. Conversation = 4-8 short turns"
+                    Content = Constant.DefaultInstruction
                 },
                 // 2. JSON Format
                 new()
@@ -320,14 +306,7 @@ Optional keys (Include only if social interaction occurs):
                     Role = PromptRole.System,
                     Position = PromptPosition.Relative,
                     Editable = true,
-                    Content = @"{{dialogue.type}}
-{{dialogue.status}}
-{{pawn1.name}}({{pawn1.age}}{{pawn1.gender}}/{{pawn1.role}}/{{pawn1.race}}) {{pawn1.job}}中。
-Nearby: {{pawns.nearby}}
-Time: {{time.hour12}}
-Season: {{time.season}}
-Weather: {{weather}}
-Location: {{location}}"
+                    Content = @"{{dialogue}}"
                 }
             }
         };
@@ -354,7 +333,7 @@ Location: {{location}}"
             Editable = true
         });
 
-        Logger.Message("Migrated legacy custom instruction to new prompt system");
+        Logger.Debug("Migrated legacy custom instruction to new prompt system");
     }
 
     /// <summary>Resets to default settings</summary>
@@ -389,5 +368,33 @@ Location: {{location}}"
         {
             _instance.InitializeDefaults();
         }
+    }
+
+    /// <summary>
+    /// Prepares prompt messages for a talk request.
+    /// This method collects all Mustache context variables and builds the prompt messages.
+    /// Must be called AFTER DecoratePrompt has been called on the talkRequest.
+    /// </summary>
+    /// <param name="talkRequest">The talk request (after DecoratePrompt)</param>
+    /// <param name="pawns">List of participating pawns</param>
+    /// <param name="status">Pawn status string</param>
+    /// <param name="dialogueTypeString">Pre-computed dialogue type string (from ContextBuilder.GetDialogueTypeString, must be called before DecoratePrompt)</param>
+    /// <returns>List of prompt messages with roles, or null if no active preset</returns>
+    public List<(Role role, string content)> PreparePromptForRequest(
+        TalkRequest talkRequest,
+        List<Pawn> pawns,
+        string status,
+        string dialogueTypeString)
+    {
+        if (GetActivePreset() == null) return null;
+        
+        // Build MustacheContext with all necessary data
+        var mustacheContext = MustacheContext.FromTalkRequest(talkRequest, pawns);
+        mustacheContext.DialogueType = dialogueTypeString;
+        mustacheContext.DialogueStatus = status;
+        mustacheContext.DialoguePrompt = talkRequest.Prompt;  // This is now the decorated prompt
+        
+        var messages = BuildPromptMessagesAsRoles(mustacheContext);
+        return messages.Count > 0 ? messages : null;
     }
 }

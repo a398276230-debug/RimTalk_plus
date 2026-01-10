@@ -72,7 +72,7 @@ public class PromptEntry : IExposable
     {
         return new PromptEntry
         {
-            Id = Guid.NewGuid().ToString(), // 新ID
+            Id = Guid.NewGuid().ToString(), // New ID for cloned entry
             Name = Name + " (Copy)",
             Content = Content,
             Role = Role,

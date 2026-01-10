@@ -79,13 +79,17 @@ public static class MustacheParser
 
     /// <summary>
     /// Handles setvar command: {{setvar::key::value}}
+    /// Value can contain :: separators, they will be preserved.
     /// </summary>
     private static string HandleSetVar(string[] parts, MustacheContext context)
     {
         if (parts.Length >= 2 && context.VariableStore != null)
         {
             var key = parts[1].Trim();
-            var value = parts.Length >= 3 ? parts[2] : "";
+            // Join all parts after key with :: to preserve separators in value
+            var value = parts.Length >= 3
+                ? string.Join("::", parts, 2, parts.Length - 2)
+                : "";
             context.VariableStore.SetVar(key, value);
         }
         return ""; // setvar produces no output
@@ -197,20 +201,20 @@ public static class MustacheParser
             
             // Time related
             "time.hour" => map != null ? GenLocalDate.HourOfDay(map).ToString() : "",
-            "time.hour12" => map != null ? GetHour12String(map) : "",
+            "time.hour12" => map != null ? CommonUtil.GetInGameHour12HString(map) : "",
             "time.day" => map != null ? GenLocalDate.DayOfYear(map).ToString() : "",
             "time.date" => map != null ? GetDateString(map) : "",
             "time.quadrum" => map != null ? GenDate.Quadrum(Find.TickManager.TicksAbs, map.Tile).Label() : "",
             "time.year" => map != null ? GenLocalDate.Year(map).ToString() : "",
             "time.season" => map != null ? GenLocalDate.Season(map).Label() : "",
             
-            // Weather/environment related
+            // Weather/environment related - reuse MustacheContextProvider methods to avoid duplication
             "weather" => map?.weatherManager?.curWeather?.label ?? "",
             "temperature" => map != null ? Mathf.RoundToInt(map.mapTemperature.OutdoorTemp).ToString() : "",
-            "location" => GetLocationString(pawn),
+            "location" => MustacheContextProvider.GetLocationString(pawn),
             "terrain" => pawn?.Position.GetTerrain(pawn.Map)?.LabelCap ?? "",
-            "beauty" => GetBeautyString(pawn),
-            "cleanliness" => GetCleanlinessString(pawn),
+            "beauty" => MustacheContextProvider.GetBeautyString(pawn),
+            "cleanliness" => MustacheContextProvider.GetCleanlinessString(pawn),
             "surroundings" => GetSurroundingsString(pawn),
             "wealth" => map != null ? Describer.Wealth(map.wealthWatcher.WealthTotal) : "",
             
@@ -220,6 +224,7 @@ public static class MustacheParser
             "colony.population" => map?.mapPawns?.FreeColonistsCount.ToString() ?? "",
             
             // Dialogue related
+            "dialogue" => context.DialoguePrompt ?? "",
             "dialogue.type" => context.DialogueType ?? "",
             "dialogue.status" => context.DialogueStatus ?? "",
             "dialogue.ismonologue" => context.IsMonologue ? "true" : "false",
@@ -273,11 +278,14 @@ public static class MustacheParser
             "relations" => GetPawnRelations(pawn),
             "equipment" => GetPawnEquipment(pawn),
             "status" => GetPawnStatus(pawn, context),
+            "genes" => GetPawnGenes(pawn),
+            "ideology" => GetPawnIdeology(pawn),
+            "captive_status" => GetPawnCaptiveStatus(pawn),
             _ => ""
         };
     }
 
-    #region Pawn Context Helpers
+    // ===== Pawn Context Helpers =====
 
     private static string GetPawnProfile(Pawn pawn)
     {
@@ -325,6 +333,24 @@ public static class MustacheParser
     {
         if (pawn == null) return "";
         return ContextBuilder.GetEquipmentContext(pawn, PromptService.InfoLevel.Normal) ?? "";
+    }
+
+    private static string GetPawnGenes(Pawn pawn)
+    {
+        if (pawn == null) return "";
+        return ContextBuilder.GetNotableGenesContext(pawn, PromptService.InfoLevel.Normal) ?? "";
+    }
+
+    private static string GetPawnIdeology(Pawn pawn)
+    {
+        if (pawn == null) return "";
+        return ContextBuilder.GetIdeologyContext(pawn, PromptService.InfoLevel.Normal) ?? "";
+    }
+
+    private static string GetPawnCaptiveStatus(Pawn pawn)
+    {
+        if (pawn == null) return "";
+        return ContextBuilder.GetPrisonerSlaveContext(pawn, PromptService.InfoLevel.Normal) ?? "";
     }
 
     private static string GetPawnStatus(Pawn pawn, MustacheContext context)
@@ -381,9 +407,7 @@ public static class MustacheParser
         return string.Join("\n", summaries);
     }
 
-    #endregion
-
-    #region Environment Helpers
+    // ===== Environment Helpers =====
 
     private static string GetDateString(Map map)
     {
@@ -392,50 +416,13 @@ public static class MustacheParser
         return gameData.DateString;
     }
 
-    private static string GetLocationString(Pawn pawn)
-    {
-        if (pawn?.Map == null) return "";
-        
-        var locationStatus = ContextHelper.GetPawnLocationStatus(pawn);
-        if (string.IsNullOrEmpty(locationStatus)) return "";
-        
-        var temperature = Mathf.RoundToInt(pawn.Position.GetTemperature(pawn.Map));
-        var room = pawn.GetRoom();
-        var roomRole = room is { PsychologicallyOutdoors: false } ? room.Role?.label ?? "" : "";
-
-        return string.IsNullOrEmpty(roomRole)
-            ? $"{locationStatus};{temperature}C"
-            : $"{locationStatus};{temperature}C;{roomRole}";
-    }
-
-    private static string GetBeautyString(Pawn pawn)
-    {
-        if (pawn?.Map == null) return "";
-        
-        var nearbyCells = ContextHelper.GetNearbyCells(pawn);
-        if (nearbyCells.Count == 0) return "";
-        
-        var beautySum = nearbyCells.Sum(c => BeautyUtility.CellBeauty(c, pawn.Map));
-        return Describer.Beauty(beautySum / nearbyCells.Count);
-    }
-
-    private static string GetCleanlinessString(Pawn pawn)
-    {
-        if (pawn?.Map == null) return "";
-        
-        var room = pawn.GetRoom();
-        if (room is not { PsychologicallyOutdoors: false }) return "";
-        
-        return Describer.Cleanliness(room.GetStat(RoomStatDefOf.Cleanliness));
-    }
+    // GetLocationString, GetBeautyString, GetCleanlinessString now reuse ContextBuilder methods
 
     private static string GetSurroundingsString(Pawn pawn)
     {
         if (pawn?.Map == null) return "";
         return ContextHelper.CollectNearbyContextText(pawn, 3) ?? "";
     }
-
-    #endregion
 
     /// <summary>
     /// Gets a pawn's race.
@@ -450,19 +437,7 @@ public static class MustacheParser
         return pawn.def.label;
     }
 
-    /// <summary>
-    /// Gets 12-hour format time.
-    /// </summary>
-    private static string GetHour12String(Map map)
-    {
-        var hour = GenLocalDate.HourOfDay(map);
-        var hour12 = hour % 12;
-        if (hour12 == 0) hour12 = 12;
-        var amPm = hour < 12 ? "AM" : "PM";
-        return $"{hour12} {amPm}";
-    }
-
-    #region Variable Registry
+    // ===== Variable Registry =====
 
     /// <summary>
     /// Gets all available built-in variables (for UI display).
@@ -498,7 +473,10 @@ public static class MustacheParser
                 ("pawn1.thoughts", "RimTalk.MustacheVar.pawn.thoughts".Translate()),
                 ("pawn1.relations", "RimTalk.MustacheVar.pawn.relations".Translate()),
                 ("pawn1.equipment", "RimTalk.MustacheVar.pawn.equipment".Translate()),
-                ("pawn1.status", "RimTalk.MustacheVar.pawn.status".Translate())
+                ("pawn1.status", "RimTalk.MustacheVar.pawn.status".Translate()),
+                ("pawn1.genes", "RimTalk.MustacheVar.pawn.genes".Translate()),
+                ("pawn1.ideology", "RimTalk.MustacheVar.pawn.ideology".Translate()),
+                ("pawn1.captive_status", "RimTalk.MustacheVar.pawn.captive_status".Translate())
             },
             ["RimTalk.MustacheVar.Category.Pawn2Plus".Translate()] = new()
             {
@@ -509,6 +487,7 @@ public static class MustacheParser
             },
             ["RimTalk.MustacheVar.Category.Dialogue".Translate()] = new()
             {
+                ("dialogue", "RimTalk.MustacheVar.dialogue".Translate()),
                 ("dialogue.type", "RimTalk.MustacheVar.dialogue.type".Translate()),
                 ("dialogue.status", "RimTalk.MustacheVar.dialogue.status".Translate()),
                 ("dialogue.ismonologue", "RimTalk.MustacheVar.dialogue.ismonologue".Translate())
@@ -555,9 +534,7 @@ public static class MustacheParser
         };
     }
 
-    #endregion
-
-    #region Mod API
+    // ===== Mod API =====
 
     /// <summary>
     /// Registers a custom variable provider (for other mods to use).
@@ -664,5 +641,4 @@ public static class MustacheParser
         return Appenders.Keys;
     }
 
-    #endregion
 }
