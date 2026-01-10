@@ -431,6 +431,21 @@ For detailed documentation, see the docs/ folder in the mod directory.</RimTalk.
     <RimTalk.MustacheVar.pawn3.name>Pawn 3's short name</RimTalk.MustacheVar.pawn3.name>
     <RimTalk.MustacheVar.pawnN.xxx>Any pawn N's property (N=1,2,3...)</RimTalk.MustacheVar.pawnN.xxx>
     
+    <!-- PawnN Loop Variables (iterates all pawns) -->
+    <RimTalk.MustacheVar.pawnn.name>All pawns' names (comma-separated)</RimTalk.MustacheVar.pawnn.name>
+    <RimTalk.MustacheVar.pawnn.profile>All pawns' profiles</RimTalk.MustacheVar.pawnn.profile>
+    <RimTalk.MustacheVar.pawnn.backstory>All pawns' backstories</RimTalk.MustacheVar.pawnn.backstory>
+    <RimTalk.MustacheVar.pawnn.traits>All pawns' traits</RimTalk.MustacheVar.pawnn.traits>
+    <RimTalk.MustacheVar.pawnn.skills>All pawns' skills</RimTalk.MustacheVar.pawnn.skills>
+    <RimTalk.MustacheVar.pawnn.health>All pawns' health status</RimTalk.MustacheVar.pawnn.health>
+    <RimTalk.MustacheVar.pawnn.thoughts>All pawns' thoughts</RimTalk.MustacheVar.pawnn.thoughts>
+    <RimTalk.MustacheVar.pawnn.relations>All pawns' relations</RimTalk.MustacheVar.pawnn.relations>
+    <RimTalk.MustacheVar.pawnn.equipment>All pawns' equipment</RimTalk.MustacheVar.pawnn.equipment>
+    <RimTalk.MustacheVar.pawnn.job>All pawns' current jobs</RimTalk.MustacheVar.pawnn.job>
+    <RimTalk.MustacheVar.pawnn.genes>All pawns' genes</RimTalk.MustacheVar.pawnn.genes>
+    <RimTalk.MustacheVar.pawnn.ideology>All pawns' ideology</RimTalk.MustacheVar.pawnn.ideology>
+    <RimTalk.MustacheVar.pawnn.captive_status>All pawns' captive status</RimTalk.MustacheVar.pawnn.captive_status>
+    
     <!-- Dialogue Variables -->
     <RimTalk.MustacheVar.dialogue>Full decorated prompt (time, weather, location, etc.)</RimTalk.MustacheVar.dialogue>
     <RimTalk.MustacheVar.dialogue.type>Dialogue type description</RimTalk.MustacheVar.dialogue.type>

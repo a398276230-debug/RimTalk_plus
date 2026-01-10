@@ -432,6 +432,21 @@
     <RimTalk.MustacheVar.pawn3.name>角色 3 的简称</RimTalk.MustacheVar.pawn3.name>
     <RimTalk.MustacheVar.pawnN.xxx>任意角色 N 的属性（N=1,2,3...）</RimTalk.MustacheVar.pawnN.xxx>
     
+    <!-- PawnN Loop Variables (遍历所有角色) -->
+    <RimTalk.MustacheVar.pawnn.name>所有角色的名字（逗号分隔）</RimTalk.MustacheVar.pawnn.name>
+    <RimTalk.MustacheVar.pawnn.profile>所有角色的资料</RimTalk.MustacheVar.pawnn.profile>
+    <RimTalk.MustacheVar.pawnn.backstory>所有角色的背景故事</RimTalk.MustacheVar.pawnn.backstory>
+    <RimTalk.MustacheVar.pawnn.traits>所有角色的特性</RimTalk.MustacheVar.pawnn.traits>
+    <RimTalk.MustacheVar.pawnn.skills>所有角色的技能</RimTalk.MustacheVar.pawnn.skills>
+    <RimTalk.MustacheVar.pawnn.health>所有角色的健康状态</RimTalk.MustacheVar.pawnn.health>
+    <RimTalk.MustacheVar.pawnn.thoughts>所有角色的想法</RimTalk.MustacheVar.pawnn.thoughts>
+    <RimTalk.MustacheVar.pawnn.relations>所有角色的关系</RimTalk.MustacheVar.pawnn.relations>
+    <RimTalk.MustacheVar.pawnn.equipment>所有角色的装备</RimTalk.MustacheVar.pawnn.equipment>
+    <RimTalk.MustacheVar.pawnn.job>所有角色的当前工作</RimTalk.MustacheVar.pawnn.job>
+    <RimTalk.MustacheVar.pawnn.genes>所有角色的基因</RimTalk.MustacheVar.pawnn.genes>
+    <RimTalk.MustacheVar.pawnn.ideology>所有角色的思想</RimTalk.MustacheVar.pawnn.ideology>
+    <RimTalk.MustacheVar.pawnn.captive_status>所有角色的囚禁状态</RimTalk.MustacheVar.pawnn.captive_status>
+    
     <!-- Dialogue Variables -->
     <RimTalk.MustacheVar.dialogue>完整的装饰提示词（时间、天气、位置等）</RimTalk.MustacheVar.dialogue>
     <RimTalk.MustacheVar.dialogue.type>对话类型描述</RimTalk.MustacheVar.dialogue.type>

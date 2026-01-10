@@ -42,7 +42,7 @@ public static class MustacheParser
         "thoughts",
         "relations",
         "equipment",
-        "status",
+        "job",
         "genes",
         "ideology",
         "captive_status"
@@ -211,7 +211,7 @@ public static class MustacheParser
             "pawn.personality" => Cache.Get(pawn)?.Personality ?? "",
             "pawn.title" => pawn?.story?.title ?? "",
             "pawn.faction" => pawn?.Faction?.Name ?? "",
-            "pawn.job" => pawn?.CurJob?.def?.label ?? "",
+            "pawn.job" => GetPawnActivity(pawn),
             "pawn.role" => pawn?.GetRole() ?? "",
             "pawn.profile" => GetPawnProfile(pawn),
             
@@ -344,7 +344,7 @@ public static class MustacheParser
             "personality" => Cache.Get(pawn)?.Personality ?? "",
             "title" => pawn?.story?.title ?? "",
             "faction" => pawn?.Faction?.Name ?? "",
-            "job" => pawn?.CurJob?.def?.label ?? "",
+            "job" => GetPawnActivity(pawn),
             "role" => pawn?.GetRole() ?? "",
             "profile" => GetPawnProfile(pawn),
             "backstory" => GetPawnBackstory(pawn),
@@ -354,7 +354,6 @@ public static class MustacheParser
             "thoughts" => GetPawnThoughts(pawn),
             "relations" => GetPawnRelations(pawn),
             "equipment" => GetPawnEquipment(pawn),
-            "status" => GetPawnStatus(pawn, context),
             "genes" => GetPawnGenes(pawn),
             "ideology" => GetPawnIdeology(pawn),
             "captive_status" => GetPawnCaptiveStatus(pawn),
@@ -373,7 +372,8 @@ public static class MustacheParser
     private static string GetPawnBackstory(Pawn pawn)
     {
         if (pawn == null) return "";
-        return PromptService.CreatePawnBackstory(pawn, PromptService.InfoLevel.Normal);
+        // Return only the childhood and adulthood backstory, not the full pawn introduction
+        return ContextBuilder.GetBackstoryContext(pawn, PromptService.InfoLevel.Normal) ?? "";
     }
 
     private static string GetPawnTraits(Pawn pawn)
@@ -429,20 +429,17 @@ public static class MustacheParser
         if (pawn == null) return "";
         return ContextBuilder.GetPrisonerSlaveContext(pawn, PromptService.InfoLevel.Normal) ?? "";
     }
-
-    private static string GetPawnStatus(Pawn pawn, MustacheContext context)
+    /// <summary>
+    /// Gets a pawn's current activity using GetActivity() extension method.
+    /// Returns detailed descriptions like "enjoying packaged survival meal" instead of just "ingest".
+    /// </summary>
+    private static string GetPawnActivity(Pawn pawn)
     {
         if (pawn == null) return "";
-        
-        var sb = new StringBuilder();
-        
-        // Current job
-        var job = pawn.CurJob?.def?.label;
-        if (!string.IsNullOrEmpty(job))
-            sb.Append($"{pawn.LabelShort} is {job}.");
-        
-        return sb.ToString();
+        var activity = pawn.GetActivity();
+        return string.IsNullOrEmpty(activity) ? "wandering" : activity;
     }
+
 
     private static string GetAllPawnsProfiles(MustacheContext context)
     {
@@ -477,8 +474,8 @@ public static class MustacheParser
             if (pawn.IsPlayer()) continue;
             
             var role = pawn.GetRole();
-            var job = pawn.CurJob?.def?.label ?? "wandering";
-            summaries.Add($"- {pawn.LabelShort}({role}) is {job}.");
+            var activity = GetPawnActivity(pawn);
+            summaries.Add($"- {pawn.LabelShort}({role}) is {activity}.");
         }
         
         return string.Join("\n", summaries);
@@ -550,7 +547,6 @@ public static class MustacheParser
                 ("pawn1.thoughts", "RimTalk.MustacheVar.pawn.thoughts".Translate()),
                 ("pawn1.relations", "RimTalk.MustacheVar.pawn.relations".Translate()),
                 ("pawn1.equipment", "RimTalk.MustacheVar.pawn.equipment".Translate()),
-                ("pawn1.status", "RimTalk.MustacheVar.pawn.status".Translate()),
                 ("pawn1.genes", "RimTalk.MustacheVar.pawn.genes".Translate()),
                 ("pawn1.ideology", "RimTalk.MustacheVar.pawn.ideology".Translate()),
                 ("pawn1.captive_status", "RimTalk.MustacheVar.pawn.captive_status".Translate())
@@ -560,7 +556,20 @@ public static class MustacheParser
                 ("pawn2.name", "RimTalk.MustacheVar.pawn2.name".Translate()),
                 ("pawn2.profile", "RimTalk.MustacheVar.pawn2.profile".Translate()),
                 ("pawn3.name", "RimTalk.MustacheVar.pawn3.name".Translate()),
-                ("pawnN.xxx", "RimTalk.MustacheVar.pawnN.xxx".Translate())
+                ("pawnN.xxx", "RimTalk.MustacheVar.pawnN.xxx".Translate()),
+                ("pawnn.name", "RimTalk.MustacheVar.pawnn.name".Translate()),
+                ("pawnn.profile", "RimTalk.MustacheVar.pawnn.profile".Translate()),
+                ("pawnn.backstory", "RimTalk.MustacheVar.pawnn.backstory".Translate()),
+                ("pawnn.traits", "RimTalk.MustacheVar.pawnn.traits".Translate()),
+                ("pawnn.skills", "RimTalk.MustacheVar.pawnn.skills".Translate()),
+                ("pawnn.health", "RimTalk.MustacheVar.pawnn.health".Translate()),
+                ("pawnn.thoughts", "RimTalk.MustacheVar.pawnn.thoughts".Translate()),
+                ("pawnn.relations", "RimTalk.MustacheVar.pawnn.relations".Translate()),
+                ("pawnn.equipment", "RimTalk.MustacheVar.pawnn.equipment".Translate()),
+                ("pawnn.job", "RimTalk.MustacheVar.pawnn.job".Translate()),
+                ("pawnn.genes", "RimTalk.MustacheVar.pawnn.genes".Translate()),
+                ("pawnn.ideology", "RimTalk.MustacheVar.pawnn.ideology".Translate()),
+                ("pawnn.captive_status", "RimTalk.MustacheVar.pawnn.captive_status".Translate())
             },
             ["RimTalk.MustacheVar.Category.Dialogue".Translate()] = new()
             {
