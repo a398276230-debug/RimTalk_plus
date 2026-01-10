@@ -40,8 +40,7 @@ public static class PresetSerializer
             sb.AppendLine($"      \"role\": \"{entry.Role}\",");
             sb.AppendLine($"      \"position\": \"{entry.Position}\",");
             sb.AppendLine($"      \"inChatDepth\": {entry.InChatDepth},");
-            sb.AppendLine($"      \"enabled\": {entry.Enabled.ToString().ToLower()},");
-            sb.AppendLine($"      \"editable\": {entry.Editable.ToString().ToLower()}");
+            sb.AppendLine($"      \"enabled\": {entry.Enabled.ToString().ToLower()}");
             sb.Append("    }");
             if (i < preset.Entries.Count - 1)
                 sb.AppendLine(",");
@@ -248,13 +247,7 @@ public static class PresetSerializer
             if (enabledMatch.Success)
                 entry.Enabled = enabledMatch.Groups[1].Value.ToLower() == "true";
             
-            // Parse editable
-            var editableMatch = Regex.Match(entryJson, @"""editable""\s*:\s*(true|false)", RegexOptions.IgnoreCase);
-            if (editableMatch.Success)
-                entry.Editable = editableMatch.Groups[1].Value.ToLower() == "true";
-            
-            // Imported entries are always editable
-            entry.Editable = true;
+            // Imported entries - just set SourceModId to null
             entry.SourceModId = null;
             
             return entry;

@@ -102,8 +102,6 @@
     <RimTalk.Settings.PromptPreset.Depth>Depth:</RimTalk.Settings.PromptPreset.Depth>
     <RimTalk.Settings.PromptPreset.Content>Content:</RimTalk.Settings.PromptPreset.Content>
     <RimTalk.Settings.PromptPreset.InsertVariable>Insert Variable</RimTalk.Settings.PromptPreset.InsertVariable>
-    <RimTalk.Settings.PromptPreset.Editable>✓ Editable</RimTalk.Settings.PromptPreset.Editable>
-    <RimTalk.Settings.PromptPreset.Locked>⚠ Locked (system entry)</RimTalk.Settings.PromptPreset.Locked>
     <RimTalk.Settings.PromptPreset.UserVariables>User Variables</RimTalk.Settings.PromptPreset.UserVariables>
     <RimTalk.Settings.PromptPreset.ModVariables>Mod Variables</RimTalk.Settings.PromptPreset.ModVariables>
     <RimTalk.Settings.PromptPreset.CustomVariables>Custom Variables</RimTalk.Settings.PromptPreset.CustomVariables>
@@ -330,6 +328,7 @@ For detailed documentation, see the docs/ folder in the mod directory.</RimTalk.
     <RimTalk.DebugWindow.Undo>Undo</RimTalk.DebugWindow.Undo>
     <RimTalk.DebugWindow.Prompt>Prompt</RimTalk.DebugWindow.Prompt>
     <RimTalk.DebugWindow.Response>Response</RimTalk.DebugWindow.Response>
+    <RimTalk.DebugWindow.PromptMessages>Prompt Messages</RimTalk.DebugWindow.PromptMessages>
     <RimTalk.DebugWindow.Contexts>Contexts</RimTalk.DebugWindow.Contexts>
     <RimTalk.DebugWindow.Generating>[Generating...]</RimTalk.DebugWindow.Generating>
     <RimTalk.DebugWindow.StatusDisabled>Disabled</RimTalk.DebugWindow.StatusDisabled>
@@ -464,6 +463,7 @@ For detailed documentation, see the docs/ folder in the mod directory.</RimTalk.
     
     <!-- System Variables -->
     <RimTalk.MustacheVar.lang>Current game language</RimTalk.MustacheVar.lang>
+    <RimTalk.MustacheVar.json.format>JSON output format (dynamic based on settings)</RimTalk.MustacheVar.json.format>
     <RimTalk.MustacheVar.context>Legacy context variable</RimTalk.MustacheVar.context>
     <RimTalk.MustacheVar.chat.history>Previous chat history</RimTalk.MustacheVar.chat.history>
     

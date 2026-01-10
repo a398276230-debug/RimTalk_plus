@@ -86,9 +86,8 @@ public class DebugWindow : Window
 
     // Temporary Editable State
     private Guid _selectedRequestIdForTemp = Guid.Empty;
-    private string _tempPrompt;
     private string _tempResponse;
-    private string _tempContexts;
+    private string _tempPromptMessages;
 
     private DebugViewMode _viewMode;
     private string _sortColumn;
@@ -99,8 +98,7 @@ public class DebugWindow : Window
     private const string ControlNamePawnFilter = "PawnFilterField";
     private const string ControlNameTextSearch = "TextSearchField";
     private const string ControlNameDetailResponse = "DetailResponseField";
-    private const string ControlNameDetailPrompt = "DetailPromptField";
-    private const string ControlNameDetailContexts = "DetailContextsField";
+    private const string ControlNameDetailMessages = "DetailMessagesField";
 
     // Styles
     private GUIStyle _contextStyle;
@@ -663,9 +661,8 @@ public class DebugWindow : Window
         if (_selectedLog.Id != _selectedRequestIdForTemp)
         {
             _selectedRequestIdForTemp = _selectedLog.Id;
-            _tempPrompt = _selectedLog.TalkRequest.Prompt ?? string.Empty;
             _tempResponse = _selectedLog.Response ?? string.Empty;
-            _tempContexts = _selectedLog.TalkRequest.Context;
+            _tempPromptMessages = FormatPromptMessages(_selectedLog.TalkRequest.PromptMessages);
         }
         else if (string.IsNullOrEmpty(_tempResponse) && !string.IsNullOrEmpty(_selectedLog.Response))
         {
@@ -744,19 +741,16 @@ public class DebugWindow : Window
         float blockSpacing = 10f;
         float headerH = 18f;
 
-        // Calculate heights dynamically based on current (possibly edited) content
+        // Calculate heights dynamically based on current content
         float viewWidth = scrollOuter.width - 16f;
         float textAreaWidth = viewWidth - 8f;
-        float promptH = Mathf.Max(70f,
-            _monoTinyStyle.CalcHeight(new GUIContent(_tempPrompt), textAreaWidth) + 10f);
         float respH = Mathf.Max(40f,
             _monoTinyStyle.CalcHeight(new GUIContent(_tempResponse), textAreaWidth) + 10f);
-        float ctxH = Mathf.Max(70f,
-            _monoTinyStyle.CalcHeight(new GUIContent(_tempContexts), textAreaWidth) + 10f);
+        float msgH = Mathf.Max(120f,
+            _monoTinyStyle.CalcHeight(new GUIContent(_tempPromptMessages), textAreaWidth) + 10f);
 
         var viewH = headerH + respH + blockSpacing +
-                    headerH + promptH + blockSpacing +
-                    headerH + ctxH + 10f;
+                    headerH + msgH + 10f;
 
         var view = new Rect(0f, 0f, scrollOuter.width - 16f, viewH);
 
@@ -774,26 +768,15 @@ public class DebugWindow : Window
             readOnly: true);
         yy += blockSpacing;
 
-        // Prompt Block
-        DrawSelectableBlock(ref yy, view.width, "RimTalk.DebugWindow.Prompt".Translate(),
-            ref _tempPrompt, promptH, ControlNameDetailPrompt,
+        // Prompt Messages Block (shows all messages sent to AI with their roles)
+        DrawSelectableBlock(ref yy, view.width, "RimTalk.DebugWindow.PromptMessages".Translate(),
+            ref _tempPromptMessages, msgH, ControlNameDetailMessages,
             onCopy: () =>
             {
-                GUIUtility.systemCopyBuffer = _tempPrompt;
+                GUIUtility.systemCopyBuffer = _tempPromptMessages;
                 Messages.Message("RimTalk.DebugWindow.Copied".Translate(), MessageTypeDefOf.TaskCompletion, false);
             },
-            onReset: () => _tempPrompt = _selectedLog.TalkRequest.Prompt ?? string.Empty);
-        yy += blockSpacing;
-
-        // Contexts Block
-        DrawSelectableBlock(ref yy, view.width, "RimTalk.DebugWindow.Contexts".Translate(),
-            ref _tempContexts, ctxH, ControlNameDetailContexts,
-            onCopy: () =>
-            {
-                GUIUtility.systemCopyBuffer = _tempContexts;
-                Messages.Message("RimTalk.DebugWindow.Copied".Translate(), MessageTypeDefOf.TaskCompletion, false);
-            },
-            onReset: () => _tempContexts = _selectedLog.TalkRequest.Context);
+            readOnly: true);
 
         Widgets.EndScrollView();
 
@@ -1254,8 +1237,7 @@ public class DebugWindow : Window
             if (focused == ControlNamePawnFilter ||
                 focused == ControlNameTextSearch ||
                 focused == ControlNameDetailResponse ||
-                focused == ControlNameDetailPrompt ||
-                focused == ControlNameDetailContexts)
+                focused == ControlNameDetailMessages)
             {
                 GUI.FocusControl(null);
             }
@@ -1366,6 +1348,35 @@ public class DebugWindow : Window
         return "";
     }
 
+    /// <summary>
+    /// Formats PromptMessages into a readable string with role headers.
+    /// Example output:
+    /// Role: system
+    /// [content]
+    ///
+    /// Role: user
+    /// [content]
+    /// </summary>
+    private static string FormatPromptMessages(List<(Role role, string content)> messages)
+    {
+        if (messages == null || messages.Count == 0)
+            return "(No prompt messages available)";
+
+        var sb = new StringBuilder();
+        for (int i = 0; i < messages.Count; i++)
+        {
+            var (role, content) = messages[i];
+            sb.Append("Role: ");
+            sb.AppendLine(role.ToString().ToLower());
+            sb.AppendLine(content);
+            
+            // Add blank line between messages (except after the last one)
+            if (i < messages.Count - 1)
+                sb.AppendLine();
+        }
+        return sb.ToString();
+    }
+
     private void Resend()
     {
         if (AIService.IsBusy())
@@ -1375,8 +1386,7 @@ public class DebugWindow : Window
         }
 
         TalkRequest debugRequest = _selectedLog.TalkRequest.Clone();
-        debugRequest.Prompt = _tempPrompt;
-        debugRequest.Context = _tempContexts;
+        // Note: Resend uses the original PromptMessages from the TalkRequest
         if (_selectedLog.Channel == Channel.Stream)
             TalkService.GenerateTalkDebug(debugRequest);
         else if (_selectedLog.Channel == Channel.Query)

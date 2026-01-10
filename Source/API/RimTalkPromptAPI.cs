@@ -410,8 +410,7 @@ public static class RimTalkPromptAPI
             Position = position,
             InChatDepth = inChatDepth,
             SourceModId = sourceModId,
-            Enabled = true,
-            Editable = true
+            Enabled = true
         };
     }
 

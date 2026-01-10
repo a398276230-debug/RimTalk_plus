@@ -232,8 +232,15 @@ public static class MustacheParser
             // Language
             "lang" => LanguageDatabase.activeLanguage?.info?.friendlyNameNative ?? "English",
             
+            // JSON format instruction (dynamic based on ApplyMoodAndSocialEffects setting)
+            "json.format" => Constant.GetJsonInstruction(Settings.Get().ApplyMoodAndSocialEffects),
+            
             // Legacy compatibility - context variable
             "context" => context.PawnContext ?? "",
+            
+            // Chat history marker - returns empty string when parsed inline
+            // (actual history insertion is handled by PromptManager.BuildMessages)
+            "chat.history" => "",
             
             // Unknown variable - keep as-is for debugging
             _ => $"{{{{unknown:{varName}}}}}"
@@ -522,6 +529,7 @@ public static class MustacheParser
             ["RimTalk.MustacheVar.Category.System".Translate()] = new()
             {
                 ("lang", "RimTalk.MustacheVar.lang".Translate()),
+                ("json.format", "RimTalk.MustacheVar.json.format".Translate()),
                 ("context", "RimTalk.MustacheVar.context".Translate()),
                 ("chat.history", "RimTalk.MustacheVar.chat.history".Translate())
             },

@@ -102,8 +102,6 @@
     <RimTalk.Settings.PromptPreset.Depth>深度：</RimTalk.Settings.PromptPreset.Depth>
     <RimTalk.Settings.PromptPreset.Content>内容：</RimTalk.Settings.PromptPreset.Content>
     <RimTalk.Settings.PromptPreset.InsertVariable>插入变量</RimTalk.Settings.PromptPreset.InsertVariable>
-    <RimTalk.Settings.PromptPreset.Editable>✓ 可编辑</RimTalk.Settings.PromptPreset.Editable>
-    <RimTalk.Settings.PromptPreset.Locked>⚠ 已锁定（系统条目）</RimTalk.Settings.PromptPreset.Locked>
     <RimTalk.Settings.PromptPreset.UserVariables>用户变量</RimTalk.Settings.PromptPreset.UserVariables>
     <RimTalk.Settings.PromptPreset.ModVariables>Mod 变量</RimTalk.Settings.PromptPreset.ModVariables>
     <RimTalk.Settings.PromptPreset.CustomVariables>自定义变量</RimTalk.Settings.PromptPreset.CustomVariables>
@@ -331,6 +329,7 @@
     <RimTalk.DebugWindow.Undo>撤销</RimTalk.DebugWindow.Undo>
     <RimTalk.DebugWindow.Prompt>提示词</RimTalk.DebugWindow.Prompt>
     <RimTalk.DebugWindow.Response>回应</RimTalk.DebugWindow.Response>
+    <RimTalk.DebugWindow.PromptMessages>提示词消息</RimTalk.DebugWindow.PromptMessages>
     <RimTalk.DebugWindow.Contexts>上下文</RimTalk.DebugWindow.Contexts>
     <RimTalk.DebugWindow.Generating>[正在生成...]</RimTalk.DebugWindow.Generating>
     <RimTalk.DebugWindow.StatusDisabled>已禁用</RimTalk.DebugWindow.StatusDisabled>
@@ -465,6 +464,7 @@
     
     <!-- System Variables -->
     <RimTalk.MustacheVar.lang>当前游戏语言</RimTalk.MustacheVar.lang>
+    <RimTalk.MustacheVar.json.format>JSON 输出格式（根据设置动态变化）</RimTalk.MustacheVar.json.format>
     <RimTalk.MustacheVar.context>传统上下文变量</RimTalk.MustacheVar.context>
     <RimTalk.MustacheVar.chat.history>之前的聊天记录</RimTalk.MustacheVar.chat.history>
     

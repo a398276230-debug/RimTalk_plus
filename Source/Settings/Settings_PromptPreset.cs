@@ -395,17 +395,8 @@ public partial class Settings
         y += 30f;
 
         // Content editing area
-        Rect contentRect = new Rect(rect.x + 10f, y, rect.width - 20f, rect.height - y + rect.y - 50f);
+        Rect contentRect = new Rect(rect.x + 10f, y, rect.width - 20f, rect.height - y + rect.y - 10f);
         selectedEntry.Content = Widgets.TextArea(contentRect, selectedEntry.Content);
-        y = contentRect.y + contentRect.height + 10f;
-
-        // Bottom info
-        Text.Font = GameFont.Tiny;
-        GUI.color = selectedEntry.Editable ? Color.green : Color.yellow;
-        Widgets.Label(new Rect(rect.x + 10f, y, rect.width - 20f, 20f),
-            selectedEntry.Editable ? "RimTalk.Settings.PromptPreset.Editable".Translate() : "RimTalk.Settings.PromptPreset.Locked".Translate());
-        GUI.color = Color.white;
-        Text.Font = GameFont.Small;
     }
 
     private void ShowVariableInsertMenu(PromptEntry entry)

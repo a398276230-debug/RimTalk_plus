@@ -265,21 +265,15 @@ public class PromptManager : IExposable
                     Name = "Base Instruction",
                     Role = PromptRole.System,
                     Position = PromptPosition.Relative,
-                    Editable = true,
                     Content = Constant.DefaultInstruction
                 },
-                // 2. JSON Format
+                // 2. JSON Format (dynamic based on ApplyMoodAndSocialEffects setting)
                 new()
                 {
                     Name = "JSON Format",
                     Role = PromptRole.System,
                     Position = PromptPosition.Relative,
-                    Editable = false,
-                    Content = @"Output JSONL.
-Required keys: ""name"", ""text"".
-Optional keys (Include only if social interaction occurs):
-""act"": Insult, Slight, Chat, Kind
-""target"": targetName"
+                    Content = "{{json.format}}"
                 },
                 // 3. Pawn Profiles
                 new()
@@ -287,16 +281,14 @@ Optional keys (Include only if social interaction occurs):
                     Name = "Pawn Profiles",
                     Role = PromptRole.System,
                     Position = PromptPosition.Relative,
-                    Editable = true,
                     Content = "{{context}}"
                 },
-                // 4. Chat History 
+                // 4. Chat History
                 new()
                 {
                     Name = "Chat History",
                     Role = PromptRole.System,
                     Position = PromptPosition.Relative,
-                    Editable = false,
                     Content = "{{chat.history}}"  // Special marker - history will be inserted here
                 },
                 // 5. Dialogue Prompt
@@ -305,8 +297,7 @@ Optional keys (Include only if social interaction occurs):
                     Name = "Dialogue Prompt",
                     Role = PromptRole.System,
                     Position = PromptPosition.Relative,
-                    Editable = true,
-                    Content = @"{{dialogue}}"
+                    Content = "{{dialogue}}"
                 }
             }
         };
@@ -329,8 +320,7 @@ Optional keys (Include only if social interaction occurs):
             Name = "Legacy Custom Instruction",
             Role = PromptRole.System,
             Position = PromptPosition.Relative,
-            Content = legacyInstruction,
-            Editable = true
+            Content = legacyInstruction
         });
 
         Logger.Debug("Migrated legacy custom instruction to new prompt system");
